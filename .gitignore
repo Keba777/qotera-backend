@@ -26,6 +26,3 @@ go.work
 
 # Docker
 docker-compose.override.yml
-
-# Build
-server
