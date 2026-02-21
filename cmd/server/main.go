@@ -51,12 +51,15 @@ func main() {
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
+	transactionRepo := repository.NewTransactionRepository(db)
 
 	// Initialize Services
 	authService := service.NewAuthService(userRepo)
+	transactionService := service.NewTransactionService(transactionRepo)
 
 	// Initialize Handlers
 	authHandler := handler.NewAuthHandler(authService)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
 
 	// Initialize Fiber app
 	app := fiber.New()
@@ -79,6 +82,11 @@ func main() {
 	auth := app.Group("/auth")
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/verify", authHandler.VerifyOTP)
+
+	// Transaction Sync and Aggregation Routes
+	transactions := app.Group("/transactions")
+	transactions.Post("/sync", transactionHandler.SyncTransactions)
+	transactions.Get("/summary", transactionHandler.GetSummary)
 
 	// Start server
 	log.Fatal(app.Listen(":" + cfg.ServerPort))
