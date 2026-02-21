@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25.5-alpine AS builder
 
 WORKDIR /app
 
@@ -13,6 +13,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server cmd/server/main.go
 
 # Final stage
 FROM alpine:latest
+
+RUN apk add --no-cache tzdata
 
 WORKDIR /app
 

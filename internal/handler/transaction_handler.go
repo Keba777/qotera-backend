@@ -3,7 +3,7 @@ package handler
 import (
 	"qotera-backend/internal/service"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 type TransactionHandler struct {
@@ -14,10 +14,10 @@ func NewTransactionHandler(transactionService service.TransactionService) *Trans
 	return &TransactionHandler{transactionService: transactionService}
 }
 
-func (h *TransactionHandler) CreateTransaction(c fiber.Ctx) error {
+func (h *TransactionHandler) CreateTransaction(c *fiber.Ctx) error {
 	return c.SendString("Create Transaction endpoint")
 }
 
-func (h *TransactionHandler) GetTransactions(c fiber.Ctx) error {
+func (h *TransactionHandler) GetTransactions(c *fiber.Ctx) error {
 	return c.SendString("Get Transactions endpoint")
 }
