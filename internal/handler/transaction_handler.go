@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"qotera-backend/internal/domain"
+	"qotera-backend/internal/middleware"
 	"qotera-backend/internal/service"
 	"strconv"
 
@@ -20,9 +21,14 @@ func NewTransactionHandler(transactionService service.TransactionService) *Trans
 
 // SyncTransactions allows the mobile app to post an array of parsed SMS transactions safely
 func (h *TransactionHandler) SyncTransactions(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userId").(uuid.UUID)
+	userID, ok := c.Locals(middleware.ContextKeyUserID).(uuid.UUID)
 	if !ok {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User ID not found in context"})
+		// Try legacy
+		if fid := c.Locals("userID"); fid != nil {
+			userID = fid.(uuid.UUID)
+		} else {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
 	}
 
 	var transactions []domain.Transaction
@@ -41,9 +47,14 @@ func (h *TransactionHandler) SyncTransactions(c *fiber.Ctx) error {
 
 // GetSummary returns daily/weekly/monthly analytics
 func (h *TransactionHandler) GetSummary(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userId").(uuid.UUID)
+	userID, ok := c.Locals(middleware.ContextKeyUserID).(uuid.UUID)
 	if !ok {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User ID not found in context"})
+		// Try legacy
+		if fid := c.Locals("userID"); fid != nil {
+			userID = fid.(uuid.UUID)
+		} else {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
 	}
 
 	timeframe := c.Query("timeframe", "monthly") // daily, weekly, monthly
@@ -82,9 +93,14 @@ func (h *TransactionHandler) GetSummary(c *fiber.Ctx) error {
 
 // GetTransactions returns a list of historical transactions
 func (h *TransactionHandler) GetTransactions(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userId").(uuid.UUID)
+	userID, ok := c.Locals(middleware.ContextKeyUserID).(uuid.UUID)
 	if !ok {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User ID not found in context"})
+		// Try legacy
+		if fid := c.Locals("userID"); fid != nil {
+			userID = fid.(uuid.UUID)
+		} else {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
 	}
 
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))

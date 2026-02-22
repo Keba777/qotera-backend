@@ -1,17 +1,23 @@
 package handler
 
 import (
+	"qotera-backend/internal/middleware"
 	"qotera-backend/internal/service"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type AuthHandler struct {
 	authService service.AuthService
+	userService service.UserService
 }
 
-func NewAuthHandler(authService service.AuthService) *AuthHandler {
-	return &AuthHandler{authService: authService}
+func NewAuthHandler(authService service.AuthService, userService service.UserService) *AuthHandler {
+	return &AuthHandler{
+		authService: authService,
+		userService: userService,
+	}
 }
 
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
@@ -60,4 +66,26 @@ func (h *AuthHandler) VerifyOTP(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"token": token})
+}
+func (h *AuthHandler) Me(c *fiber.Ctx) error {
+	userID, ok := c.Locals(middleware.ContextKeyUserID).(uuid.UUID)
+	if !ok {
+		// Try legacy
+		if fid := c.Locals("userID"); fid != nil {
+			userID = fid.(uuid.UUID)
+		} else {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+	}
+
+	user, err := h.userService.GetByID(c.Context(), userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch user"})
+	}
+
+	if user == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	}
+
+	return c.JSON(user)
 }

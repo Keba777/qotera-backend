@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: qotera-backend
+    runtime: docker
+    plan: free
+    region: oregon 
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        fromDatabase:
+          name: qotera-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: qotera-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: qotera-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: qotera-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: qotera-db
+          property: database
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+databases:
+  - name: qotera-db
+    plan: free
+    region: oregon
+    databaseName: qotera
+    user: postgres

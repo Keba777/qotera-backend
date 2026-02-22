@@ -34,7 +34,9 @@ func AuthMiddleware() fiber.Handler {
 		}
 
 		// Store userID in context locals
-		c.Locals("userId", userID)
+		c.Locals(ContextKeyUserID, userID)
+		// For backward compatibility during transition
+		c.Locals("userID", userID)
 
 		return c.Next()
 	}

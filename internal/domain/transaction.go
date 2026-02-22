@@ -25,6 +25,7 @@ type Transaction struct {
 	Type            TransactionType   `json:"type" gorm:"type:varchar(20);not null"`
 	Source          TransactionSource `json:"source" gorm:"type:varchar(50);not null"`
 	ReferenceNumber *string           `json:"reference_number" gorm:"type:varchar(100);uniqueIndex:idx_user_ref"` // Composite unique index to avoid duplicate inserts
+	CategoryID      *uuid.UUID        `json:"category_id" gorm:"type:uuid;index"`
 	TransactionDate time.Time         `json:"transaction_date" gorm:"not null;index"`
 	RawMessage      string            `json:"raw_message" gorm:"type:text;not null"`
 	CreatedAt       time.Time         `json:"created_at" gorm:"autoCreateTime"`

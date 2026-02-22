@@ -10,10 +10,16 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+type CategorySpent struct {
+	CategoryID uuid.UUID `json:"category_id"`
+	TotalSpent float64   `json:"total_spent"`
+}
+
 type TransactionSummary struct {
-	TotalIncome  float64 `json:"total_income"`
-	TotalExpense float64 `json:"total_expense"`
-	Balance      float64 `json:"balance"`
+	TotalIncome   float64         `json:"total_income"`
+	TotalExpense  float64         `json:"total_expense"`
+	Balance       float64         `json:"balance"`
+	CategorySpent []CategorySpent `json:"category_spent" gorm:"-"`
 }
 
 type TransactionRepository interface {
