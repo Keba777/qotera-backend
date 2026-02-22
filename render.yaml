@@ -35,4 +35,3 @@ databases:
     plan: free
     region: oregon
     databaseName: qotera
-    user: postgres
