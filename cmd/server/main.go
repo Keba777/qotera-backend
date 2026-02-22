@@ -4,6 +4,7 @@ import (
 	"log"
 	"qotera-backend/internal/domain"
 	"qotera-backend/internal/handler"
+	"qotera-backend/internal/middleware"
 	"qotera-backend/internal/repository"
 	"qotera-backend/internal/service"
 	"qotera-backend/pkg/config"
@@ -85,7 +86,9 @@ func main() {
 
 	// Transaction Sync and Aggregation Routes
 	transactions := app.Group("/transactions")
+	transactions.Use(middleware.AuthMiddleware())
 	transactions.Post("/sync", transactionHandler.SyncTransactions)
+	transactions.Get("/", transactionHandler.GetTransactions)
 	transactions.Get("/summary", transactionHandler.GetSummary)
 
 	// Start server

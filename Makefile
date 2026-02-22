@@ -1,4 +1,4 @@
-.PHONY: up down build logs restart clean
+.PHONY: up down build logs restart clean dev dev-up
 
 # Default generic command
 all: up
@@ -19,6 +19,11 @@ down:
 
 # Restart the application
 restart: down up
+
+# Start for development with live logs (non-detached)
+dev: dev-up
+dev-up: down
+	docker compose up --build
 
 # View live logs for all services
 logs:

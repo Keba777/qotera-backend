@@ -19,7 +19,7 @@ const (
 
 type Transaction struct {
 	ID              uuid.UUID         `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	UserID          uuid.UUID         `json:"user_id" gorm:"type:uuid;index;not null"`
+	UserID          uuid.UUID         `json:"user_id" gorm:"type:uuid;index;not null;uniqueIndex:idx_user_ref"`
 	Amount          float64           `json:"amount" gorm:"type:decimal(15,2);not null"`
 	Fee             *float64          `json:"fee" gorm:"type:decimal(15,2)"`
 	Type            TransactionType   `json:"type" gorm:"type:varchar(20);not null"`

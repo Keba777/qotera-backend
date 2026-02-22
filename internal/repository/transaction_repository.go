@@ -21,6 +21,7 @@ type TransactionRepository interface {
 	GetMonthlySummary(ctx context.Context, userID uuid.UUID, year int, month int) (*TransactionSummary, error)
 	GetWeeklySummary(ctx context.Context, userID uuid.UUID, year int, week int) (*TransactionSummary, error)
 	GetDailySummary(ctx context.Context, userID uuid.UUID, year int, month int, day int) (*TransactionSummary, error)
+	GetTransactions(ctx context.Context, userID uuid.UUID, limit int, offset int) ([]domain.Transaction, error)
 }
 
 type transactionRepository struct {
@@ -92,4 +93,16 @@ func (r *transactionRepository) GetDailySummary(ctx context.Context, userID uuid
 
 	summary.Balance = summary.TotalIncome - summary.TotalExpense
 	return &summary, nil
+}
+
+func (r *transactionRepository) GetTransactions(ctx context.Context, userID uuid.UUID, limit int, offset int) ([]domain.Transaction, error) {
+	var transactions []domain.Transaction
+	err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("transaction_date DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&transactions).Error
+
+	return transactions, err
 }

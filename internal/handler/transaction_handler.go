@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"qotera-backend/internal/domain"
 	"qotera-backend/internal/service"
 	"strconv"
@@ -19,25 +20,20 @@ func NewTransactionHandler(transactionService service.TransactionService) *Trans
 
 // SyncTransactions allows the mobile app to post an array of parsed SMS transactions safely
 func (h *TransactionHandler) SyncTransactions(c *fiber.Ctx) error {
-	// TODO: Replace with authenticated user ID from Middleware JWT Context
-	// For testing purposes, we extract it from the header or mock it
-	userIDStr := c.Get("X-User-ID")
-	if userIDStr == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing User ID"})
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid User ID"})
+	userID, ok := c.Locals("userId").(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User ID not found in context"})
 	}
 
 	var transactions []domain.Transaction
 	if err := c.BodyParser(&transactions); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON payload"})
+		log.Printf("SyncTransactions: BodyParser failed: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON payload: " + err.Error()})
 	}
 
 	if err := h.transactionService.SyncTransactions(c.Context(), userID, transactions); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to sync transactions"})
+		log.Printf("SyncTransactions: Service call failed: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to sync transactions: " + err.Error()})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Transactions synced successfully"})
@@ -45,13 +41,9 @@ func (h *TransactionHandler) SyncTransactions(c *fiber.Ctx) error {
 
 // GetSummary returns daily/weekly/monthly analytics
 func (h *TransactionHandler) GetSummary(c *fiber.Ctx) error {
-	userIDStr := c.Get("X-User-ID")
-	if userIDStr == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing User ID"})
-	}
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid User ID"})
+	userID, ok := c.Locals("userId").(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User ID not found in context"})
 	}
 
 	timeframe := c.Query("timeframe", "monthly") // daily, weekly, monthly
@@ -86,4 +78,22 @@ func (h *TransactionHandler) GetSummary(c *fiber.Ctx) error {
 	default:
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid timeframe specified"})
 	}
+}
+
+// GetTransactions returns a list of historical transactions
+func (h *TransactionHandler) GetTransactions(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userId").(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User ID not found in context"})
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "50"))
+	offset, _ := strconv.Atoi(c.Query("offset", "0"))
+
+	transactions, err := h.transactionService.GetTransactions(c.Context(), userID, limit, offset)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch transactions"})
+	}
+
+	return c.JSON(transactions)
 }
